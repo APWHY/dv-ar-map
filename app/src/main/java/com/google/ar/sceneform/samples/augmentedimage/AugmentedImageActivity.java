@@ -31,11 +31,16 @@ import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode;
+import com.google.ar.sceneform.samples.augmentedimage.R;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.ar.sceneform.ux.ArFragment;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import wayfinding.MapPlan;
 
 /**
  * This application demonstrates using augmented images to place anchor nodes. app to include image
@@ -45,12 +50,12 @@ public class AugmentedImageActivity extends AppCompatActivity {
 
   private ArFragment arFragment;
   private ImageView fitToScanView;
-  private  AugmentedImageNode foundNode = null;
-  private ModelRenderable mapModel;
+  private com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode foundNode = null;
+  private CompletableFuture<ModelRenderable> mapModel;
 
   // Augmented image and its associated center pose anchor, keyed by the augmented image in
   // the database.
-  private final Map<AugmentedImage, AugmentedImageNode> augmentedImageMap = new HashMap<>();
+  private final Map<AugmentedImage, com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode> augmentedImageMap = new HashMap<>();
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +65,15 @@ public class AugmentedImageActivity extends AppCompatActivity {
     arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
     fitToScanView = findViewById(R.id.image_view_fit_to_scan);
 
+    mapModel =
+              ModelRenderable.builder()
+                      .setSource(this, R.raw.initial)
+                      .build();
+
+
+
     arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
-    ModelRenderable.builder()
-            .setSource(this, R.raw.initial)
-            .build()
-            .thenAccept(r -> mapModel = r)
-            .exceptionally(throwable -> {
-              Log.e("oops", "Exception loading", throwable);
-              return null;});
+
   }
 
   @Override
@@ -95,7 +101,6 @@ public class AugmentedImageActivity extends AppCompatActivity {
         frame.getUpdatedTrackables(AugmentedImage.class);
 
 
-
     for (AugmentedImage augmentedImage : updatedAugmentedImages) {
       switch (augmentedImage.getTrackingState()) {
         case PAUSED:
@@ -108,27 +113,19 @@ public class AugmentedImageActivity extends AppCompatActivity {
         case TRACKING:
           // Have to switch to UI Thread to update View.
           fitToScanView.setVisibility(View.GONE);
-
           // Create a new anchor for newly found images.
           if (!augmentedImageMap.containsKey(augmentedImage)) {
             foundNode = new AugmentedImageNode(this);
             foundNode.setImage(augmentedImage);
             augmentedImageMap.put(augmentedImage, foundNode);
             arFragment.getArSceneView().getScene().addChild(foundNode);
-            Vector3 localPosition = new Vector3();
-            localPosition.set(0.0f, 0.0f, 0.0f);
-            Node cornerNode = new Node();
-            cornerNode.setParent(foundNode);
-            Vector3 relativeMapPos = new Vector3(18.5f, -1f, 22f);
-            cornerNode.setLocalPosition(Vector3.add(localPosition, relativeMapPos));
-            Vector3 mapLocalPos = cornerNode.getWorldPosition();
-            Quaternion mapLocalRotation = cornerNode.getWorldRotation();;
-            Node mapNode = new Node();
-            mapNode.setLocalRotation(mapLocalRotation);
-            mapNode.setParent(arFragment.getArSceneView().getScene());
-            mapNode.setLocalPosition(mapLocalPos);
-            mapNode.setRenderable(mapModel);
+
+            MapPlan floorPlan = new MapPlan(this, arFragment.getArSceneView().getScene(), foundNode, mapModel);
+            System.out.println(floorPlan);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
           }
+
           break;
 
         case STOPPED:
