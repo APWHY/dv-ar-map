@@ -1,0 +1,11 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
+
+newmtl _Wax_02_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.674510 0.800000 0.639216
+Ks 0.330000 0.330000 0.330000
+d 0.592466
+map_Kd green_arrow/_Wax_02_1.jpg
+

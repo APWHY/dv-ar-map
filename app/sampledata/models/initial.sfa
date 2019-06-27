@@ -1,0 +1,76 @@
+{
+  materials: [
+    {
+      name: 'FrontColor',
+      parameters: [
+        {
+          baseColor: null,
+        },
+        {
+          baseColorTint: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+    {
+      name: 'DV_Sydney_Floor_Plan__1_',
+      parameters: [
+        {
+          baseColor: 'DV_Sydney_Floor_Plan__1_',
+        },
+        {
+          baseColorTint: [
+            0.50196099999999999,
+            0.50196099999999999,
+            0.50196099999999999,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/models/initial.obj',
+    name: 'initial',
+    recenter: 'root',
+    scale: 1,
+  },
+  samplers: [
+    {
+      file: 'sampledata/models/DV_Sydney_Floor_Plan__1_.jpg',
+      name: 'DV_Sydney_Floor_Plan__1_',
+      pipeline_name: 'initial/DV_Sydney_Floor_Plan__1_.jpg',
+    },
+  ],
+  version: '0.54:2',
+}
