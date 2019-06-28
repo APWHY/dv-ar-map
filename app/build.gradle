@@ -85,7 +85,13 @@ sceneform.asset('sampledata/models/initial.obj',
         'sampledata/models/initial.sfa',
         'src/main/raw/res/initial')
 
-sceneform.asset('sampledata/models/initial.obj',
+
+sceneform.asset('sampledata/models/blue_arrow.obj',
         'default',
-        'sampledata/models/initial.sfa',
-        'src/main/res/raw/initial')
+        'sampledata/models/blue_arrow.sfa',
+        'src/main/res/raw/blue_arrow')
+
+sceneform.asset('sampledata/models/green_arrow.obj',
+        'default',
+        'sampledata/models/green_arrow.sfa',
+        'src/main/res/raw/green_arrow')

@@ -1,0 +1,49 @@
+{
+  materials: [
+    {
+      name: '_Wax_02_1',
+      parameters: [
+        {
+          baseColor: '_Wax_02_1',
+        },
+        {
+          baseColorTint: [
+            0.67451000000000005,
+            0.80000000000000004,
+            0.63921600000000001,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: 0.85,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/models/green_arrow.obj',
+    name: 'green_arrow',
+    recenter: 'root',
+  },
+  samplers: [
+    {
+      file: 'sampledata/models/green_arrow/_Wax_02_1.jpg',
+      name: '_Wax_02_1',
+      pipeline_name: 'green_arrow/_Wax_02_1.jpg',
+    },
+  ],
+  version: '0.54:2',
+}

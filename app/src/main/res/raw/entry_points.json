@@ -1,20 +1,16 @@
 [
   {
-    "name": "Spindle",
+    "roomName": "Spindle",
     "angleIn": 270,
-    "nav": {
-      "x": 18,
-      "z": 20,
-      "edges": []
-    }
+    "id": 1,
+    "x": 18,
+    "z": 20
   },
   {
-    "name": "Venture Room 3",
+    "roomName": "Venture Room 1",
     "angleIn": 270,
-    "nav": {
-      "x": 13,
-      "z": 20,
-      "edges": []
-    }
+    "id": 2,
+    "x": 21,
+    "z": 20
   }
 ]

@@ -24,7 +24,6 @@ import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.samples.augmentedimage.R;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -71,10 +70,7 @@ public class AugmentedImageNode extends AnchorNode {
           ModelRenderable.builder()
               .setSource(context, Uri.parse("models/frame_lower_right.sfb"))
               .build();
-      basePlan =
-              ModelRenderable.builder()
-                      .setSource(context, R.raw.initial)
-                      .build();
+
     }
   }
 
