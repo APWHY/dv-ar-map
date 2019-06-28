@@ -1,15 +1,15 @@
 {
   materials: [
     {
-      name: 'Translucent_Glass_Tinted',
+      name: 'Resin_Blue',
       parameters: [
         {
-          baseColor: 'Translucent_Glass_Tinted',
+          baseColor: 'Resin_Blue',
         },
         {
           baseColorTint: [
-            0.027451,
-            0.78823500000000002,
+            0.66666700000000001,
+            0.82352899999999996,
             0.94117600000000001,
             1,
           ],
@@ -21,7 +21,33 @@
           roughness: 1,
         },
         {
-          opacity: 0.85,
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+    {
+      name: 'BackColor',
+      parameters: [
+        {
+          baseColor: null,
+        },
+        {
+          baseColorTint: [
+            0.64313699999999996,
+            0.69803899999999997,
+            0.73333300000000001,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
         },
       ],
       source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
@@ -40,9 +66,9 @@
   },
   samplers: [
     {
-      file: 'sampledata/models/blue_arrow/Translucent_Glass_Tinted.jpg',
-      name: 'Translucent_Glass_Tinted',
-      pipeline_name: 'blue_arrow/Translucent_Glass_Tinted.jpg',
+      file: 'sampledata/models/blue_arrow/Resin_Blue.jpg',
+      name: 'Resin_Blue',
+      pipeline_name: 'blue_arrow/Resin_Blue.jpg',
     },
   ],
   version: '0.54:2',

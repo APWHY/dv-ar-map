@@ -2,10 +2,19 @@
 ## Alias OBJ Material File
 # Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
 
-newmtl Translucent_Glass_Tinted
+newmtl Resin_Blue
 Ka 0.000000 0.000000 0.000000
-Kd 0.027451 0.788235 0.941176
+Kd 0.666667 0.823529 0.941176
 Ks 0.330000 0.330000 0.330000
-d 0.480000
-map_Kd blue_arrow/Translucent_Glass_Tinted.jpg
+map_Kd blue_arrow/Resin_Blue.jpg
+
+newmtl BackColor
+Ka 0.000000 0.000000 0.000000
+Kd 0.643137 0.698039 0.733333
+Ks 0.330000 0.330000 0.330000
+
+newmtl ForegroundColor
+Ka 0.000000 0.000000 0.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.330000 0.330000 0.330000
 

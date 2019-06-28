@@ -1,16 +1,16 @@
 {
   materials: [
     {
-      name: '_Wax_02_1',
+      name: '_4',
       parameters: [
         {
-          baseColor: '_Wax_02_1',
+          baseColor: null,
         },
         {
           baseColorTint: [
-            0.67451000000000005,
-            0.80000000000000004,
-            0.63921600000000001,
+            0,
+            0.83137300000000003,
+            0,
             1,
           ],
         },
@@ -21,7 +21,33 @@
           roughness: 1,
         },
         {
-          opacity: 0.85,
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+    {
+      name: 'BackColor',
+      parameters: [
+        {
+          baseColor: null,
+        },
+        {
+          baseColorTint: [
+            0.64313699999999996,
+            0.69803899999999997,
+            0.73333300000000001,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
         },
       ],
       source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
@@ -38,12 +64,5 @@
     name: 'green_arrow',
     recenter: 'root',
   },
-  samplers: [
-    {
-      file: 'sampledata/models/green_arrow/_Wax_02_1.jpg',
-      name: '_Wax_02_1',
-      pipeline_name: 'green_arrow/_Wax_02_1.jpg',
-    },
-  ],
   version: '0.54:2',
 }

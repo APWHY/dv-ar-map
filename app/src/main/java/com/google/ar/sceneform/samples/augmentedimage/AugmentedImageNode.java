@@ -46,7 +46,8 @@ public class AugmentedImageNode extends AnchorNode {
   private static CompletableFuture<ModelRenderable> urCorner;
   private static CompletableFuture<ModelRenderable> lrCorner;
   private static CompletableFuture<ModelRenderable> llCorner;
-  private static CompletableFuture<ModelRenderable> basePlan;
+
+  private static CompletableFuture<ModelRenderable> test;
 //
 //  public Node map;
 
@@ -70,6 +71,10 @@ public class AugmentedImageNode extends AnchorNode {
           ModelRenderable.builder()
               .setSource(context, Uri.parse("models/frame_lower_right.sfb"))
               .build();
+      test =
+              ModelRenderable.builder()
+                      .setSource(context, R.raw.blue_arrow)
+                      .build();
 
     }
   }
@@ -85,8 +90,8 @@ public class AugmentedImageNode extends AnchorNode {
     this.image = image;
 
     // If any of the models are not loaded, then recurse when all are loaded.
-    if (!ulCorner.isDone() || !urCorner.isDone() || !llCorner.isDone() || !lrCorner.isDone() || !basePlan.isDone()) {
-      CompletableFuture.allOf(ulCorner, urCorner, llCorner, lrCorner, basePlan)
+    if (!test.isDone() || !ulCorner.isDone() || !urCorner.isDone() || !llCorner.isDone() || !lrCorner.isDone()) {
+      CompletableFuture.allOf(test, ulCorner, urCorner, llCorner, lrCorner)
           .thenAccept((Void aVoid) -> setImage(image))
           .exceptionally(
               throwable -> {
@@ -129,6 +134,13 @@ public class AugmentedImageNode extends AnchorNode {
     cornerNode.setParent(this);
     cornerNode.setLocalPosition(localPosition);
     cornerNode.setRenderable(llCorner.getNow(null));
+
+//    // test
+//    localPosition.set(0f, 2.0f, 0f);
+//    cornerNode = new Node();
+//    cornerNode.setParent(this);
+//    cornerNode.setLocalPosition(localPosition);
+//    cornerNode.setRenderable(test.getNow(null));
 
   }
 

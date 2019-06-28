@@ -1,16 +1,101 @@
 [
   {
-    "roomName": "Spindle",
-    "angleIn": 270,
-    "id": 1,
-    "x": 18,
+    "roomName": "Venture Room 1",
+    "angleIn": 180,
+    "id": 21,
+    "x": 21.3,
     "z": 20
   },
   {
-    "roomName": "Venture Room 1",
-    "angleIn": 270,
-    "id": 2,
-    "x": 21,
+    "roomName": "Spindle",
+    "angleIn": 180,
+    "id": 22,
+    "x": 17.5,
     "z": 20
+  },
+  {
+    "roomName": "Venture Room 3",
+    "angleIn": 180,
+    "id": 23,
+    "x": 13,
+    "z": 20
+  },
+  {
+    "roomName": "IT Centre",
+    "angleIn": 180,
+    "id": 24,
+    "x": 8,
+    "z": 20
+  },
+  {
+    "roomName": "Lens",
+    "angleIn": 0,
+    "id": 25,
+    "x": 3,
+    "z": 21.8
+  },
+  {
+    "roomName": "Flint",
+    "angleIn": 315,
+    "id": 26,
+    "x": 27,
+    "z": 15
+  },
+  {
+    "roomName": "Reception",
+    "angleIn": 0,
+    "id": 27,
+    "x": 29,
+    "z": 11
+  },
+  {
+    "roomName": "Restrooms",
+    "angleIn": 180,
+    "id": 28,
+    "x": 25,
+    "z": 9.5
+  },
+  {
+    "roomName": "Kindling",
+    "angleIn": 0,
+    "id": 29,
+    "x": 21.3,
+    "z": 11.5
+  },
+  {
+    "roomName": "Venture Room 2",
+    "angleIn": 0,
+    "id": 30,
+    "x": 16.5,
+    "z": 11.5
+  },
+  {
+    "roomName": "Telephone Room 1",
+    "angleIn": 0,
+    "id": 31,
+    "x": 13.2,
+    "z": 11.5
+  },
+  {
+    "roomName": "Telephone Room 2",
+    "angleIn": 0,
+    "id": 32,
+    "x": 10,
+    "z": 11.5
+  },
+  {
+    "roomName": "Venture Room 4",
+    "angleIn": 0,
+    "id": 33,
+    "x": 8.8,
+    "z": 11.5
+  },
+  {
+    "roomName": "Ember",
+    "angleIn": 180,
+    "id": 34,
+    "x": -2,
+    "z": 10.5
   }
+
 ]

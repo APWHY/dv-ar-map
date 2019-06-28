@@ -14,10 +14,14 @@ public class EntryPoint extends NavPoint {
 
 
 
-    public EntryPoint(JSONPoint jsonPoint){
-        super(jsonPoint);
+    public EntryPoint(JSONPoint jsonPoint, ArrowLibrary arrows){
+        super(jsonPoint, arrows);
         this.roomName = jsonPoint.roomName;
         this.angleIn = jsonPoint.angleIn;
+    }
+
+    public void pointToRoom() {
+        super.setRotation(this.angleIn);
     }
 
     public String getRoomName(){
@@ -25,13 +29,13 @@ public class EntryPoint extends NavPoint {
     }
 
     public float getAngleIn() {
-        return angleIn;
+        return this.angleIn;
     }
 
     @Override
     public String toString(){
         return String.format(Locale.ENGLISH, STRING_FMT,
-                TAG, this.roomName, this.angleIn, super.toString());
+            TAG, this.roomName, this.angleIn, super.toString());
     }
 
 }
@@ -45,5 +49,5 @@ class JSONPoint {
     int id;
     float x,z;
 
-    JSONPoint(){}
+    JSONPoint(){} // empty constructor needed for gson
 }

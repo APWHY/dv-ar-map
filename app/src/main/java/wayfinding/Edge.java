@@ -30,7 +30,7 @@ public class Edge {
 
     public String toString() {
         return String.format(Locale.ENGLISH, STRING_FMT,
-            TAG, to.getId(), distance);
+            TAG, this.to.getId(), this.distance);
     }
 }
 
@@ -40,6 +40,6 @@ public class Edge {
 // information as opposed to double vertex format (Dijkstra's algorithm, basically)
 class JSONEdge {
     int from, to;
-    JSONEdge(){}
+    JSONEdge(){} // empty constructor needed for gson
 }
 
