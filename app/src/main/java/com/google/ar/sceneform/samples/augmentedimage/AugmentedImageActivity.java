@@ -69,56 +69,12 @@ public class AugmentedImageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        loadModels();
         setContentView(R.layout.activity_main);
 
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
         fitToScanView = findViewById(R.id.image_view_fit_to_scan);
-
-        CompletableFuture<ModelRenderable> mapModelFuture =
-            ModelRenderable.builder()
-                .setSource(this, R.raw.initial)
-                .build();
-        CompletableFuture<ModelRenderable> navArrowFuture =
-            ModelRenderable.builder()
-                .setSource(this, R.raw.blue_arrow)
-                .build();
-        CompletableFuture<ModelRenderable> destArrowFuture=
-            ModelRenderable.builder()
-                .setSource(this, R.raw.green_arrow)
-                .build();
-
-
-
-        CompletableFuture.allOf(mapModelFuture, navArrowFuture, destArrowFuture)
-            .handle(
-                (aVoid, throwable) -> {
-                    if (throwable != null) {
-                        Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load renderable, %s", throwable));
-                        SnackbarHelper.getInstance().showMessage(this, "Failed to load renderables!");
-                    }
-                    try {
-                        this.mapModel = mapModelFuture.get();
-                        this.navArrow = navArrowFuture.get();
-                        this.destArrow = destArrowFuture.get();
-
-                        this.hasFinishedLoading = true;
-
-                    } catch (InterruptedException | ExecutionException ex) {
-                        Log.e(TAG, String.format(Locale.ENGLISH, "Unable to get renderable, %s", ex));
-                        SnackbarHelper.getInstance().showMessage(this, "Failed to get renderables!");
-                    }
-                    return null;
-                });
-
-
-
-
-
-
-
-
         arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
-
     }
 
     @Override
@@ -166,9 +122,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
                         arFragment.getArSceneView().getScene().addChild(foundNode);
 
                         MapPlan floorPlan = new MapPlan(this, arFragment.getArSceneView().getScene(), foundNode, mapModel, navArrow, destArrow);
-                        System.out.println(floorPlan);
-                        System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-
+                        // TODO: pass this to the menu object
                     }
 
                     break;
@@ -178,5 +132,40 @@ public class AugmentedImageActivity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    // load the models (floor plan, blue and green arrows) -- the floor plan is only needed for debugging, however
+    private void loadModels(){
+        CompletableFuture<ModelRenderable> mapModelFuture =
+                ModelRenderable.builder()
+                        .setSource(this, R.raw.initial)
+                        .build();
+        CompletableFuture<ModelRenderable> navArrowFuture =
+                ModelRenderable.builder()
+                        .setSource(this, R.raw.blue_arrow)
+                        .build();
+        CompletableFuture<ModelRenderable> destArrowFuture=
+                ModelRenderable.builder()
+                        .setSource(this, R.raw.green_arrow)
+                        .build();
+
+        CompletableFuture.allOf(mapModelFuture, navArrowFuture, destArrowFuture)
+                .handle(
+                        (aVoid, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load renderable, %s", throwable));
+                                SnackbarHelper.getInstance().showMessage(this, "Failed to load renderables!");
+                            }
+                            try {
+                                this.mapModel = mapModelFuture.get();
+                                this.navArrow = navArrowFuture.get();
+                                this.destArrow = destArrowFuture.get();
+                                this.hasFinishedLoading = true;
+                            } catch (InterruptedException | ExecutionException ex) {
+                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to get renderable, %s", ex));
+                                SnackbarHelper.getInstance().showMessage(this, "Failed to get renderables!");
+                            }
+                            return null;
+                        });
     }
 }

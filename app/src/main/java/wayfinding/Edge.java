@@ -10,7 +10,7 @@ public class Edge {
 
 
     private final NavPoint to;
-    private final float distance;
+    private final double distance;
 
     public Edge (NavPoint from, NavPoint to){
         this.to = to;
@@ -24,7 +24,7 @@ public class Edge {
         return this.to;
     }
 
-    public float getDistance() {
+    public double getDistance() {
         return this.distance;
     }
 

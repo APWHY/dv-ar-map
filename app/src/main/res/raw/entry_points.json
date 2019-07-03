@@ -36,7 +36,7 @@
   },
   {
     "roomName": "Flint",
-    "angleIn": 315,
+    "angleIn": 45,
     "id": 26,
     "x": 27,
     "z": 15
@@ -80,21 +80,21 @@
     "roomName": "Telephone Room 2",
     "angleIn": 0,
     "id": 32,
-    "x": 10,
+    "x": 9.5,
     "z": 11.5
   },
   {
     "roomName": "Venture Room 4",
     "angleIn": 0,
     "id": 33,
-    "x": 8.8,
+    "x": 7.5,
     "z": 11.5
   },
   {
     "roomName": "Ember",
     "angleIn": 180,
     "id": 34,
-    "x": -2,
+    "x": -3,
     "z": 10.5
   }
 

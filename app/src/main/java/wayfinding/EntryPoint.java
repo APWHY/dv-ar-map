@@ -1,8 +1,5 @@
 package wayfinding;
 
-
-import android.util.Log;
-
 import java.util.Locale;
 
 public class EntryPoint extends NavPoint {
@@ -14,23 +11,23 @@ public class EntryPoint extends NavPoint {
 
 
 
-    public EntryPoint(JSONPoint jsonPoint, ArrowLibrary arrows){
-        super(jsonPoint, arrows);
+    public EntryPoint(JSONPoint jsonPoint){
+        super(jsonPoint);
         this.roomName = jsonPoint.roomName;
         this.angleIn = jsonPoint.angleIn;
     }
 
     public void pointToRoom() {
-        super.setRotation(this.angleIn);
+        this.setRotation(this.angleIn);
     }
 
     public String getRoomName(){
         return this.roomName;
     }
 
-    public float getAngleIn() {
-        return this.angleIn;
-    }
+//    public float getAngleIn() {
+//        return this.angleIn;
+//    }
 
     @Override
     public String toString(){

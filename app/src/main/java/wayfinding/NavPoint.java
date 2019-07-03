@@ -6,7 +6,6 @@ import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,7 +14,6 @@ public class NavPoint extends Node {
     private static final String TAG = "wayfinder.NavPoint";
     private static final String STRING_FMT = "%s: id is %d, (x,z) is (%f,%f), edges are %s";
     private static final float HOVER_HEIGHT = 1f;
-    private static ArrowLibrary arrows;
 
     private final int id;
     private final float x;
@@ -23,12 +21,11 @@ public class NavPoint extends Node {
 
     private Set<Edge> edges = new HashSet<>();
 
-    public NavPoint(JSONPoint jsonPoint, ArrowLibrary arrows) {
+    public NavPoint(JSONPoint jsonPoint) {
         super();
         this.id = jsonPoint.id;
         this.x = jsonPoint.x;
         this.z = jsonPoint.z;
-        this.arrows = arrows;
     }
 
     public NavPoint(int id, float x, float z){
@@ -40,7 +37,7 @@ public class NavPoint extends Node {
 
     public void setParent(NodeParent parent){
         super.setParent(parent);
-        this.setLocalPosition(new Vector3(-this.x, HOVER_HEIGHT, -this.z));
+        this.setLocalPosition(new Vector3(-this.x, HOVER_HEIGHT, -this.z)); // inverse of the initial translation of the map node
     }
 
     public void setRotation(float degrees){
@@ -59,9 +56,7 @@ public class NavPoint extends Node {
     public void addEdge(NavPoint to){
         this.edges.add(new Edge(this, to));
     }
-    public Iterator<Edge> getEdges(){
-        return this.edges.iterator();
-    }
+    public Edge[] getEdges(){ return this.edges.toArray(new Edge[]{}); }
 
     public int getId(){ return this.id; }
     public float getX(){ return this.x; }
