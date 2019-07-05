@@ -1,15 +1,26 @@
 package wayfinding;
 
 import android.content.Context;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
+import com.google.ar.core.Camera;
+import com.google.ar.core.Frame;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.NodeParent;
 import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.samples.augmentedimage.R;
+import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.gson.Gson;
 
 import java.io.InputStream;
@@ -20,6 +31,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -39,52 +52,24 @@ public class MapPlan extends Node {
     private static final int ROOT_NAV = 0; // the id of the root node
     private static final int[] ROOT_EDGES = new int[] {2,21,22,23,24,25,3}; // the nodes that this root node is connected to
 
-    private ModelRenderable basePlan;
+    private ModelRenderable mapModel;
     private ModelRenderable navArrow;
     private ModelRenderable destArrow;
+    private ViewRenderable roomMenu;
+    private boolean hasFinishedLoading;
+
+    Node menuNode;
 
     private Map<String, EntryPoint> entries = new HashMap<>();
     private SparseArray<NavPoint> navs = new SparseArray<>();
     Map<NavPoint, DijkstraPoint> navToDijkstra = new HashMap<>();
 
-    public MapPlan(Context context, NodeParent parent, Node seeder,
-                   ModelRenderable basePlan, ModelRenderable navArrow, ModelRenderable destArrow) {
+    public MapPlan(Context context) {
         super();
 
-        this.navArrow = navArrow;
-        this.destArrow = destArrow;
-
-        // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
-
-        // we create a temporary node within the local space of the augmentedImage that is detected
-        // this node will be the one that we attach our understanding of the map space to
-        // once done, we translate the map space such that the location of the augmentedImage lines
-        // up with the it's location in the map space (this must be hard coded)
-
-        // after this is done, we take the world position and rotation and use those values to
-        // create the real mapNode object. The reason we do this is that by attaching the mapNode
-        // to the scene instead of the augmentedImage, we can reduce the amount of tilt that
-        // the model will suffer from as the scene is oriented upwards using the gravity sensor
-        // in the AR device, as opposed to more complicated (and less accurate) world mapping
-        // algorithms used to remember where the augmentedImage is in AR space
-
-        this.basePlan = basePlan;
-        Node localMapNode = new Node();
-        localMapNode.setParent(seeder);
-        localMapNode.setLocalPosition(RELATIVE_MAP_POS);
-        Vector3 mapLocalPos = localMapNode.getWorldPosition();
-        Quaternion mapLocalRotation = localMapNode.getWorldRotation();
-
-        this.setLocalRotation(mapLocalRotation);
-        this.setParent(parent);
-        this.setLocalPosition(mapLocalPos);
-//        this.setRenderable(basePlan);
-
         this.loadGraphFromJSON(context);
-
+        this.loadModels(context);
         this.makeSPT();
-        this.chooseTarget("Telephone Room 2");
-
     }
     // This is a helper class which we use to build our SPT (Shortest Path Tree) out of the graph
     // that we have stored in this.navs
@@ -150,6 +135,11 @@ public class MapPlan extends Node {
     // Traverses the linked list provided for by this.makeSPT() for the target, makes arrows appear
     // at each node in the linked list before rotating them to point at each other
     public void chooseTarget(String roomName){
+
+        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setRenderable(null); }
+        this.menuNode.setRenderable(null);
+
+
         EntryPoint target = entries.get(roomName);
         target.pointToRoom();
         target.setRenderable(destArrow);
@@ -227,6 +217,120 @@ public class MapPlan extends Node {
         }
 
         for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setParent(this); }
+    }
+
+    // load the models (floor plan, blue and green arrows) -- the floor plan is only needed for debugging, however
+    private void loadModels(Context context){
+
+        LinearLayout menuWrapper = new LinearLayout(context);
+        View dvMapWrapper = View.inflate(context,R.layout.room_menu,menuWrapper);
+        ScrollView roomMenu = dvMapWrapper.findViewById(R.id.dvMenu);
+
+        ViewGroup roomMenuLayout = (ViewGroup) roomMenu.getChildAt(0);
+
+        System.out.println("--------__________------------__________----------____________");
+        System.out.println(roomMenuLayout.getChildCount());
+        System.out.println("--------__________------------__________----------____________");
+
+        LayoutInflater inflater = ((AppCompatActivity) context).getLayoutInflater();
+
+        for (String room: entries.keySet()){
+            View menuItemWrapper =  inflater.inflate(R.layout.menu_item, roomMenuLayout, false);
+
+            TextView newLine = menuItemWrapper.findViewById(R.id.menuItem);
+            newLine.setText(room);
+//            newLine.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 20));
+            roomMenuLayout.addView(newLine);
+        }
+
+
+
+
+
+
+        CompletableFuture<ModelRenderable> mapModelFuture =
+                ModelRenderable.builder()
+                        .setSource(context, R.raw.initial)
+                        .build();
+        CompletableFuture<ModelRenderable> navArrowFuture =
+                ModelRenderable.builder()
+                        .setSource(context, R.raw.blue_arrow)
+                        .build();
+        CompletableFuture<ModelRenderable> destArrowFuture=
+                ModelRenderable.builder()
+                        .setSource(context, R.raw.green_arrow)
+                        .build();
+        // Build a renderable from a 2D View.
+        CompletableFuture<ViewRenderable> roomMenuFuture =
+                ViewRenderable.builder().setView(context, menuWrapper).build();
+
+        CompletableFuture.allOf(mapModelFuture, navArrowFuture, destArrowFuture, roomMenuFuture)
+                .handle(
+                        (aVoid, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load renderable, %s", throwable));
+                                SnackbarHelper.getInstance().showMessage((AppCompatActivity) context, "Failed to load renderables!");
+                            }
+                            try {
+                                this.mapModel = mapModelFuture.get();
+                                this.navArrow = navArrowFuture.get();
+                                this.destArrow = destArrowFuture.get();
+                                this.roomMenu = roomMenuFuture.get();
+                                this.hasFinishedLoading = true;
+                            } catch (InterruptedException | ExecutionException ex) {
+                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to get renderable, %s", ex));
+                                SnackbarHelper.getInstance().showMessage((AppCompatActivity) context, "Failed to get renderables!");
+                            }
+                            return null;
+                        });
+    }
+
+    public void showMap(NodeParent parent, Node seeder, Frame frame){
+        // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
+
+        // we create a temporary node within the local space of the augmentedImage that is detected
+        // this node will be the one that we attach our understanding of the map space to
+        // once done, we translate the map space such that the location of the augmentedImage lines
+        // up with the it's location in the map space (this must be hard coded)
+
+        // after this is done, we take the world position and rotation and use those values to
+        // create the real mapNode object. The reason we do this is that by attaching the mapNode
+        // to the scene instead of the augmentedImage, we can reduce the amount of tilt that
+        // the model will suffer from as the scene is oriented upwards using the gravity sensor
+        // in the AR device, as opposed to more complicated (and less accurate) world mapping
+        // algorithms used to remember where the augmentedImage is in AR space
+
+        Node localMapNode = new Node();
+        localMapNode.setParent(seeder);
+        localMapNode.setLocalPosition(RELATIVE_MAP_POS);
+        Vector3 mapLocalPos = localMapNode.getWorldPosition();
+        Quaternion mapLocalRotation = localMapNode.getWorldRotation();
+
+        this.setLocalRotation(mapLocalRotation);
+        this.setParent(parent);
+        this.setLocalPosition(mapLocalPos);
+//        this.setRenderable(mapModel);
+        this.menuNode = new Node();
+        menuNode.setParent(seeder);
+        menuNode.setLocalPosition(new Vector3(0,0.25f,0));
+        menuNode.setLocalScale(new Vector3(0.5f,0.5f,0.5f));
+//        Vector3 menuPosition = menuNode.getWorldPosition();
+//        Vector3 cameraPosition = getScene().getCamera().getWorldPosition();
+//        Vector3 direction = Vector3.subtract(cameraPosition,menuPosition);
+//        float[] cameraZ = frame.getCamera().getDisplayOrientedPose().getYAxis();
+//        Quaternion lookRotation = Quaternion.lookRotation(direction, new Vector3(cameraZ[0], cameraZ[1], cameraZ[2]));
+//        menuNode.setWorldRotation(lookRotation);
+
+        Vector3 menuWorldPos = menuNode.getWorldPosition();
+        menuNode.setParent(this);
+        menuNode.setWorldPosition(menuWorldPos);
+
+        menuNode.setWorldRotation(getScene().getCamera().getWorldRotation());
+        menuNode.setRenderable(roomMenu);
+
+
+//        this.chooseTarget("Telephone Room 2");
+
     }
 }
 

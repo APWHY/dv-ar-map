@@ -18,9 +18,16 @@ package com.google.ar.sceneform.samples.augmentedimage;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Layout;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
@@ -31,6 +38,7 @@ import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode;
 import com.google.ar.sceneform.samples.augmentedimage.R;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
@@ -56,11 +64,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
     private ImageView fitToScanView;
     private com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode foundNode = null;
 
-    private ModelRenderable mapModel;
-    private ModelRenderable navArrow;
-    private ModelRenderable destArrow;
-
-    private boolean hasFinishedLoading = false;
+    private MapPlan mapPlan;
 
     // Augmented image and its associated center pose anchor, keyed by the augmented image in
     // the database.
@@ -69,12 +73,14 @@ public class AugmentedImageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        loadModels();
         setContentView(R.layout.activity_main);
 
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
         fitToScanView = findViewById(R.id.image_view_fit_to_scan);
         arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
+
+
+        this.mapPlan = new MapPlan(this);
     }
 
     @Override
@@ -97,6 +103,8 @@ public class AugmentedImageActivity extends AppCompatActivity {
         if (frame == null || frame.getCamera().getTrackingState() != TrackingState.TRACKING) {
             return;
         }
+
+
 
         Collection<AugmentedImage> updatedAugmentedImages =
                 frame.getUpdatedTrackables(AugmentedImage.class);
@@ -121,8 +129,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
                         augmentedImageMap.put(augmentedImage, foundNode);
                         arFragment.getArSceneView().getScene().addChild(foundNode);
 
-                        MapPlan floorPlan = new MapPlan(this, arFragment.getArSceneView().getScene(), foundNode, mapModel, navArrow, destArrow);
-                        // TODO: pass this to the menu object
+                        this.mapPlan.showMap(arFragment.getArSceneView().getScene(),foundNode, frame);
                     }
 
                     break;
@@ -134,38 +141,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
         }
     }
 
-    // load the models (floor plan, blue and green arrows) -- the floor plan is only needed for debugging, however
-    private void loadModels(){
-        CompletableFuture<ModelRenderable> mapModelFuture =
-                ModelRenderable.builder()
-                        .setSource(this, R.raw.initial)
-                        .build();
-        CompletableFuture<ModelRenderable> navArrowFuture =
-                ModelRenderable.builder()
-                        .setSource(this, R.raw.blue_arrow)
-                        .build();
-        CompletableFuture<ModelRenderable> destArrowFuture=
-                ModelRenderable.builder()
-                        .setSource(this, R.raw.green_arrow)
-                        .build();
+    public void chooseTarget(View v){ this.mapPlan.chooseTarget(((Button) v).getText().toString()); }
 
-        CompletableFuture.allOf(mapModelFuture, navArrowFuture, destArrowFuture)
-                .handle(
-                        (aVoid, throwable) -> {
-                            if (throwable != null) {
-                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load renderable, %s", throwable));
-                                SnackbarHelper.getInstance().showMessage(this, "Failed to load renderables!");
-                            }
-                            try {
-                                this.mapModel = mapModelFuture.get();
-                                this.navArrow = navArrowFuture.get();
-                                this.destArrow = destArrowFuture.get();
-                                this.hasFinishedLoading = true;
-                            } catch (InterruptedException | ExecutionException ex) {
-                                Log.e(TAG, String.format(Locale.ENGLISH, "Unable to get renderable, %s", ex));
-                                SnackbarHelper.getInstance().showMessage(this, "Failed to get renderables!");
-                            }
-                            return null;
-                        });
-    }
+
 }

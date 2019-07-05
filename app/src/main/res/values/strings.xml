@@ -15,6 +15,6 @@
    limitations under the License.
 -->
 <resources>
-  <string name="app_name">Augmented Images</string>
+  <string name="app_name">DV Wayfinder</string>
   <string name="fit_image_to_scan">Fit image to scan</string>
 </resources>
