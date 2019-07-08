@@ -1,6 +1,8 @@
 package wayfinding;
 
 import android.content.Context;
+import android.graphics.ColorSpace;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
@@ -32,6 +34,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 
@@ -56,7 +59,7 @@ public class MapPlan extends Node {
     private ModelRenderable navArrow;
     private ModelRenderable destArrow;
     private ViewRenderable roomMenu;
-    private boolean hasFinishedLoading;
+    private final CountDownLatch latch = new CountDownLatch(1);
 
     Node menuNode;
 
@@ -79,12 +82,12 @@ public class MapPlan extends Node {
         double dist;
         private final double INF = 9999;
 
-        public DijkstraPoint(NavPoint point) {
+        private DijkstraPoint(NavPoint point) {
             this.point = point;
             this.prev = null;
             this.dist = INF;
         }
-        @Override
+        @NonNull
         public String toString(){
             return String.format(Locale.ENGLISH, "DijkstraPoint for: %s, Prev: %s, Dist: %f",
                     this.point.getId(), this.prev, this.dist);
@@ -94,8 +97,9 @@ public class MapPlan extends Node {
     private class DijkstraComparator implements Comparator<DijkstraPoint> {
         @Override
         public int compare(DijkstraPoint first, DijkstraPoint second){
-            if (first.dist <= second.dist){ return -1;}
-            return 1;
+//            if (first.dist == second.dist){ return 0;}
+//            if (first.dist < second.dist){ return -1;}
+            return Double.compare(first.dist, second.dist);
         }
     }
     // Implementation of Dijkstra's algothrim for the graph. Can be made more efficient
@@ -135,10 +139,8 @@ public class MapPlan extends Node {
     // Traverses the linked list provided for by this.makeSPT() for the target, makes arrows appear
     // at each node in the linked list before rotating them to point at each other
     public void chooseTarget(String roomName){
-
         for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setRenderable(null); }
         this.menuNode.setRenderable(null);
-
 
         EntryPoint target = entries.get(roomName);
         target.pointToRoom();
@@ -215,39 +217,39 @@ public class MapPlan extends Node {
                         "NullPointerException when assigning edges %d and %d.", e.from, e.to));
             }
         }
+            for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setParent(this); }
 
-        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setParent(this); }
     }
 
     // load the models (floor plan, blue and green arrows) -- the floor plan is only needed for debugging, however
     private void loadModels(Context context){
-
+        // prepare to generate the menu we use to choose our target
+        LayoutInflater menuInflater = ((AppCompatActivity) context).getLayoutInflater();
         LinearLayout menuWrapper = new LinearLayout(context);
-        View dvMapWrapper = View.inflate(context,R.layout.room_menu,menuWrapper);
+        View dvMapWrapper = menuInflater.inflate(R.layout.room_menu,menuWrapper,true);
         ScrollView roomMenu = dvMapWrapper.findViewById(R.id.dvMenu);
-
         ViewGroup roomMenuLayout = (ViewGroup) roomMenu.getChildAt(0);
 
-        System.out.println("--------__________------------__________----------____________");
-        System.out.println(roomMenuLayout.getChildCount());
-        System.out.println("--------__________------------__________----------____________");
-
-        LayoutInflater inflater = ((AppCompatActivity) context).getLayoutInflater();
-
+        // the menu is generated dynamically from the contents of navs
         for (String room: entries.keySet()){
-            View menuItemWrapper =  inflater.inflate(R.layout.menu_item, roomMenuLayout, false);
-
+            View menuItemWrapper =  menuInflater.inflate(R.layout.menu_item, roomMenuLayout, false);
             TextView newLine = menuItemWrapper.findViewById(R.id.menuItem);
             newLine.setText(room);
-//            newLine.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 20));
             roomMenuLayout.addView(newLine);
+
+            // prepare the room cards that we display in front of every room before passing the models to the relevant EntryPoint objects
+            LayoutInflater roomInflater = ((AppCompatActivity) context).getLayoutInflater();
+            LinearLayout roomCardWrapper = new LinearLayout(context);
+            View roomCard = roomInflater.inflate(R.layout.room_card, roomCardWrapper, true);
+            TextView cardText = roomCard.findViewById(R.id.room_card);
+            cardText.setText(room);
+            ViewRenderable.builder().setView(context, roomCardWrapper).build()
+                    .thenAccept( renderable -> entries.get(room).setCard(renderable))
+                    .exceptionally(e -> {
+                        Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load renderable, %s", e));
+                        return null;
+                    });
         }
-
-
-
-
-
-
         CompletableFuture<ModelRenderable> mapModelFuture =
                 ModelRenderable.builder()
                         .setSource(context, R.raw.initial)
@@ -276,7 +278,7 @@ public class MapPlan extends Node {
                                 this.navArrow = navArrowFuture.get();
                                 this.destArrow = destArrowFuture.get();
                                 this.roomMenu = roomMenuFuture.get();
-                                this.hasFinishedLoading = true;
+                                this.latch.countDown();
                             } catch (InterruptedException | ExecutionException ex) {
                                 Log.e(TAG, String.format(Locale.ENGLISH, "Unable to get renderable, %s", ex));
                                 SnackbarHelper.getInstance().showMessage((AppCompatActivity) context, "Failed to get renderables!");
@@ -286,6 +288,8 @@ public class MapPlan extends Node {
     }
 
     public void showMap(NodeParent parent, Node seeder, Frame frame){
+
+
         // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
 
         // we create a temporary node within the local space of the augmentedImage that is detected
@@ -326,10 +330,17 @@ public class MapPlan extends Node {
         menuNode.setWorldPosition(menuWorldPos);
 
         menuNode.setWorldRotation(getScene().getCamera().getWorldRotation());
-        menuNode.setRenderable(roomMenu);
 
+        // wait for models to finish loading before doing this part -- blocking operation but I don't want to make a whole runnable thing just for
+        try{
+            latch.await();
+            menuNode.setRenderable(roomMenu);
+//            new Thread(() -> menuNode.setRenderable(roomMenu)).start();
+        } catch (InterruptedException e) {
+            Log.e(TAG, String.format(Locale.ENGLISH, "Couldn't wait for renderables, %s", e));
+        }
+//        menuNode.setRenderable(roomMenu);
 
-//        this.chooseTarget("Telephone Room 2");
 
     }
 }

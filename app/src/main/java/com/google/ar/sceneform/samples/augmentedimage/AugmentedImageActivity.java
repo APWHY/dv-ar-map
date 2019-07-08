@@ -18,37 +18,20 @@ package com.google.ar.sceneform.samples.augmentedimage;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Layout;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.Frame;
 import com.google.ar.core.TrackingState;
 import com.google.ar.sceneform.FrameTime;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.ViewRenderable;
-import com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode;
-import com.google.ar.sceneform.samples.augmentedimage.R;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.ar.sceneform.ux.ArFragment;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+
 
 import wayfinding.MapPlan;
 
@@ -128,7 +111,6 @@ public class AugmentedImageActivity extends AppCompatActivity {
                         foundNode.setImage(augmentedImage);
                         augmentedImageMap.put(augmentedImage, foundNode);
                         arFragment.getArSceneView().getScene().addChild(foundNode);
-
                         this.mapPlan.showMap(arFragment.getArSceneView().getScene(),foundNode, frame);
                     }
 
