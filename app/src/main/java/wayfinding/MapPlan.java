@@ -1,7 +1,6 @@
 package wayfinding;
 
 import android.content.Context;
-import android.graphics.ColorSpace;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,10 +12,10 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.google.ar.core.Camera;
-import com.google.ar.core.Frame;
+
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.NodeParent;
+import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
@@ -72,79 +71,86 @@ public class MapPlan extends Node {
 
         this.loadGraphFromJSON(context);
         this.loadModels(context);
+        this.setUpModels();
         this.makeSPT();
     }
-    // This is a helper class which we use to build our SPT (Shortest Path Tree) out of the graph
-    // that we have stored in this.navs
-    private class DijkstraPoint {
-        NavPoint point;
-        DijkstraPoint prev;
-        double dist;
-        private final double INF = 9999;
 
-        private DijkstraPoint(NavPoint point) {
-            this.point = point;
-            this.prev = null;
-            this.dist = INF;
-        }
-        @NonNull
-        public String toString(){
-            return String.format(Locale.ENGLISH, "DijkstraPoint for: %s, Prev: %s, Dist: %f",
-                    this.point.getId(), this.prev, this.dist);
-        }
+    public void update(){
+        Scene scene = getScene(); // save a million unneeded function calls
+        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).update(scene); }
+//        entries.get("Spindle").update(getScene());
+
     }
 
-    private class DijkstraComparator implements Comparator<DijkstraPoint> {
-        @Override
-        public int compare(DijkstraPoint first, DijkstraPoint second){
-//            if (first.dist == second.dist){ return 0;}
-//            if (first.dist < second.dist){ return -1;}
-            return Double.compare(first.dist, second.dist);
-        }
-    }
-    // Implementation of Dijkstra's algothrim for the graph. Can be made more efficient
-    // by having it stop once the target is found but this allows the user to maybe come back and
-    // choose a different one.
-    private void makeSPT(){
-        // initialise our vertex set and add the root node to it
-        Queue<DijkstraPoint> unexplored = new PriorityQueue<>(new DijkstraComparator());
-        DijkstraPoint rootDijkstra = new DijkstraPoint(navs.valueAt(ROOT_NAV));
-        rootDijkstra.dist = 0;
-        unexplored.add(rootDijkstra);
-        // add the remaining nodes
-        for (int j = 1; j < navs.size(); j++) {
-            NavPoint n = navs.valueAt(j);
-            unexplored.add(new DijkstraPoint(n));
-        }
-        for (DijkstraPoint d: unexplored){
-            this.navToDijkstra.put(d.point, d);
-        }
-        while (unexplored.size() > 0){
-            DijkstraPoint current = unexplored.poll();
+    public void showMap(NodeParent parent, Node seeder){
 
-            for (Edge e : current.point.getEdges()){
-                DijkstraPoint to = this.navToDijkstra.get(e.getTo());
-                if(!unexplored.contains(to)){continue;}
-                double alt = current.dist + e.getDistance();
-                if (alt < to.dist){
-                    to.dist = alt;
-                    to.prev = current;
-                    unexplored.remove(to); // not doing this means the unexplored priority queue loses order
-                    unexplored.add(to);    // it's ugly but does the job for now and a more efficient algorithm will take more time
-                }
-            }
+
+        // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
+
+        // we create a temporary node within the local space of the augmentedImage that is detected
+        // this node will be the one that we attach our understanding of the map space to
+        // once done, we translate the map space such that the location of the augmentedImage lines
+        // up with the it's location in the map space (this must be hard coded)
+
+        // after this is done, we take the world position and rotation and use those values to
+        // create the real mapNode object. The reason we do this is that by attaching the mapNode
+        // to the scene instead of the augmentedImage, we can reduce the amount of tilt that
+        // the model will suffer from as the scene is oriented upwards using the gravity sensor
+        // in the AR device, as opposed to more complicated (and less accurate) world mapping
+        // algorithms used to remember where the augmentedImage is in AR space
+
+        Node localMapNode = new Node();
+        localMapNode.setParent(seeder);
+        localMapNode.setLocalPosition(RELATIVE_MAP_POS);
+        Vector3 mapLocalPos = localMapNode.getWorldPosition();
+        Quaternion mapLocalRotation = localMapNode.getWorldRotation();
+
+        this.setLocalRotation(mapLocalRotation);
+        this.setParent(parent);
+        this.setLocalPosition(mapLocalPos);
+//        this.setRenderable(mapModel);
+
+
+
+
+        this.menuNode = new Node();
+        menuNode.setParent(seeder);
+        menuNode.setLocalPosition(new Vector3(0,0.25f,0));
+        menuNode.setLocalScale(new Vector3(0.5f,0.5f,0.5f));
+
+        Vector3 menuWorldPos = menuNode.getWorldPosition();
+        menuNode.setParent(this);
+        menuNode.setWorldPosition(menuWorldPos);
+        try {
+            menuNode.setWorldRotation(getScene().getCamera().getWorldRotation());
+
+        } catch (NullPointerException e){
+            Log.e(TAG, String.format(Locale.ENGLISH, "Couldn't get world rotation from scene camera, %s", e));
+
         }
+
+        // wait for models to finish loading before doing this part -- blocking operation but I don't want to make a whole runnable thing just for
+        try{
+            latch.await();
+            menuNode.setRenderable(roomMenu);
+            for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setModel(navArrow); }
+            for (EntryPoint p : entries.values().toArray(new EntryPoint[]{})){ p.setModel(destArrow); }
+        } catch (InterruptedException e) {
+            Log.e(TAG, String.format(Locale.ENGLISH, "Couldn't wait for renderables, %s", e));
+        }
+//        menuNode.setRenderable(roomMenu);
+
+
     }
 
     // Traverses the linked list provided for by this.makeSPT() for the target, makes arrows appear
     // at each node in the linked list before rotating them to point at each other
     public void chooseTarget(String roomName){
-        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setRenderable(null); }
+        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setVisible(false); }
         this.menuNode.setRenderable(null);
 
         EntryPoint target = entries.get(roomName);
-        target.pointToRoom();
-        target.setRenderable(destArrow);
+        target.setVisible(true);
 
         DijkstraPoint current =  navToDijkstra.get(navs.get(target.getId()));
 
@@ -168,13 +174,13 @@ public class MapPlan extends Node {
                 angleTo = 360 - angleTo;
             }
             current.prev.point.setRotation(angleTo);
-            current.prev.point.setRenderable(navArrow);
+            current.prev.point.setVisible(true);
 
             current = current.prev;
         }
     }
 
-    private void loadGraphFromJSON(Context context){
+    private void loadGraphFromJSON(@org.jetbrains.annotations.NotNull Context context){
         Gson gson = new Gson();
 
         // load entry points (nodes which are in the doorway of a room)
@@ -217,7 +223,7 @@ public class MapPlan extends Node {
                         "NullPointerException when assigning edges %d and %d.", e.from, e.to));
             }
         }
-            for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setParent(this); }
+        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setParent(this); }
 
     }
 
@@ -287,61 +293,72 @@ public class MapPlan extends Node {
                         });
     }
 
-    public void showMap(NodeParent parent, Node seeder, Frame frame){
 
-
-        // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
-
-        // we create a temporary node within the local space of the augmentedImage that is detected
-        // this node will be the one that we attach our understanding of the map space to
-        // once done, we translate the map space such that the location of the augmentedImage lines
-        // up with the it's location in the map space (this must be hard coded)
-
-        // after this is done, we take the world position and rotation and use those values to
-        // create the real mapNode object. The reason we do this is that by attaching the mapNode
-        // to the scene instead of the augmentedImage, we can reduce the amount of tilt that
-        // the model will suffer from as the scene is oriented upwards using the gravity sensor
-        // in the AR device, as opposed to more complicated (and less accurate) world mapping
-        // algorithms used to remember where the augmentedImage is in AR space
-
-        Node localMapNode = new Node();
-        localMapNode.setParent(seeder);
-        localMapNode.setLocalPosition(RELATIVE_MAP_POS);
-        Vector3 mapLocalPos = localMapNode.getWorldPosition();
-        Quaternion mapLocalRotation = localMapNode.getWorldRotation();
-
-        this.setLocalRotation(mapLocalRotation);
-        this.setParent(parent);
-        this.setLocalPosition(mapLocalPos);
-//        this.setRenderable(mapModel);
-        this.menuNode = new Node();
-        menuNode.setParent(seeder);
-        menuNode.setLocalPosition(new Vector3(0,0.25f,0));
-        menuNode.setLocalScale(new Vector3(0.5f,0.5f,0.5f));
-//        Vector3 menuPosition = menuNode.getWorldPosition();
-//        Vector3 cameraPosition = getScene().getCamera().getWorldPosition();
-//        Vector3 direction = Vector3.subtract(cameraPosition,menuPosition);
-//        float[] cameraZ = frame.getCamera().getDisplayOrientedPose().getYAxis();
-//        Quaternion lookRotation = Quaternion.lookRotation(direction, new Vector3(cameraZ[0], cameraZ[1], cameraZ[2]));
-//        menuNode.setWorldRotation(lookRotation);
-
-        Vector3 menuWorldPos = menuNode.getWorldPosition();
-        menuNode.setParent(this);
-        menuNode.setWorldPosition(menuWorldPos);
-
-        menuNode.setWorldRotation(getScene().getCamera().getWorldRotation());
-
-        // wait for models to finish loading before doing this part -- blocking operation but I don't want to make a whole runnable thing just for
-        try{
-            latch.await();
-            menuNode.setRenderable(roomMenu);
-//            new Thread(() -> menuNode.setRenderable(roomMenu)).start();
-        } catch (InterruptedException e) {
-            Log.e(TAG, String.format(Locale.ENGLISH, "Couldn't wait for renderables, %s", e));
-        }
-//        menuNode.setRenderable(roomMenu);
-
-
+    private void setUpModels(){
+        for(EntryPoint e: entries.values().toArray(new EntryPoint[]{})){ e.pointToRoom(); }
     }
+
+    // This is a helper class which we use to build our SPT (Shortest Path Tree) out of the graph
+    // that we have stored in this.navs
+    private class DijkstraPoint {
+        NavPoint point;
+        DijkstraPoint prev;
+        double dist;
+        private final double INF = 9999;
+
+        private DijkstraPoint(NavPoint point) {
+            this.point = point;
+            this.prev = null;
+            this.dist = INF;
+        }
+        @NonNull
+        public String toString(){
+            return String.format(Locale.ENGLISH, "DijkstraPoint for: %s, Prev: %s, Dist: %f",
+                    this.point.getId(), this.prev, this.dist);
+        }
+    }
+
+    private class DijkstraComparator implements Comparator<DijkstraPoint> {
+        @Override
+        public int compare(DijkstraPoint first, DijkstraPoint second){
+//            if (first.dist == second.dist){ return 0;}
+//            if (first.dist < second.dist){ return -1;}
+            return Double.compare(first.dist, second.dist);
+        }
+    }
+    // Implementation of Dijkstra's algothrim for the graph. Can be made more efficient
+    // by having it stop once the target is found but this allows the user to maybe come back and
+    // choose a different one.
+    private void makeSPT(){
+        // initialise our vertex set and add the root node to it
+        Queue<DijkstraPoint> unexplored = new PriorityQueue<>(new DijkstraComparator());
+        DijkstraPoint rootDijkstra = new DijkstraPoint(navs.valueAt(ROOT_NAV));
+        rootDijkstra.dist = 0;
+        unexplored.add(rootDijkstra);
+        // add the remaining nodes
+        for (int j = 1; j < navs.size(); j++) {
+            NavPoint n = navs.valueAt(j);
+            unexplored.add(new DijkstraPoint(n));
+        }
+        for (DijkstraPoint d: unexplored){
+            this.navToDijkstra.put(d.point, d);
+        }
+        while (unexplored.size() > 0){
+            DijkstraPoint current = unexplored.poll();
+
+            for (Edge e : current.point.getEdges()){
+                DijkstraPoint to = this.navToDijkstra.get(e.getTo());
+                if(!unexplored.contains(to)){continue;}
+                double alt = current.dist + e.getDistance();
+                if (alt < to.dist){
+                    to.dist = alt;
+                    to.prev = current;
+                    unexplored.remove(to); // not doing this means the unexplored priority queue loses order
+                    unexplored.add(to);    // it's ugly but does the job for now and a more efficient algorithm will take more time
+                }
+            }
+        }
+    }
+
 }
 

@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class NavPoint extends Node {
+public class NavPoint extends BoundedNode {
     private static final String TAG = "wayfinder.NavPoint";
     private static final String STRING_FMT = "%s: id is %d, (x,z) is (%f,%f), edges are %s";
     private static final float HOVER_HEIGHT = 1f;

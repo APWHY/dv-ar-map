@@ -1,16 +1,16 @@
 {
   materials: [
     {
-      name: 'Resin_Blue',
+      name: '_4',
       parameters: [
         {
-          baseColor: 'Resin_Blue',
+          baseColor: null,
         },
         {
           baseColorTint: [
-            0.66666700000000001,
-            0.82352899999999996,
-            0.94117600000000001,
+            0.40000000000000002,
+            1,
+            0.99607800000000002,
             1,
           ],
         },
@@ -64,12 +64,5 @@
     name: 'blue_arrow',
     recenter: 'root',
   },
-  samplers: [
-    {
-      file: 'sampledata/models/blue_arrow/Resin_Blue.jpg',
-      name: 'Resin_Blue',
-      pipeline_name: 'blue_arrow/Resin_Blue.jpg',
-    },
-  ],
   version: '0.54:2',
 }

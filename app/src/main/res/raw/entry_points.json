@@ -36,17 +36,17 @@
   },
   {
     "roomName": "Flint",
-    "angleIn": 45,
+    "angleIn": 60,
     "id": 26,
-    "x": 27,
-    "z": 15
+    "x": 26.5,
+    "z": 16
   },
   {
     "roomName": "Reception",
     "angleIn": 0,
     "id": 27,
     "x": 29,
-    "z": 11
+    "z": 11.6
   },
   {
     "roomName": "Restrooms",

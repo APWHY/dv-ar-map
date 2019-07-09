@@ -139,6 +139,7 @@
     <orderEntry type="library" name="Gradle: com.android.support:appcompat-v7:28.0.0@aar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:loader:28.0.0@aar" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.core:runtime:1.1.1@aar" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:15.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.google.ar.sceneform:sceneform-base:1.9.0@aar" level="project" />
     <orderEntry type="library" name="Gradle: com.google.ar.sceneform:filament-android:1.9.0@aar" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:livedata-core:1.1.1@aar" level="project" />

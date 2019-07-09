@@ -111,9 +111,9 @@ public class AugmentedImageActivity extends AppCompatActivity {
                         foundNode.setImage(augmentedImage);
                         augmentedImageMap.put(augmentedImage, foundNode);
                         arFragment.getArSceneView().getScene().addChild(foundNode);
-                        this.mapPlan.showMap(arFragment.getArSceneView().getScene(),foundNode, frame);
+                        this.mapPlan.showMap(arFragment.getArSceneView().getScene(),foundNode);
                     }
-
+                    this.mapPlan.update();
                     break;
 
                 case STOPPED:

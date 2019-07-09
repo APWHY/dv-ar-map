@@ -1,8 +1,11 @@
 package wayfinding;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.Scene;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 
 import java.util.Locale;
@@ -11,10 +14,10 @@ public class EntryPoint extends NavPoint {
     private static final String TAG = "wayfinder.EntryPoint";
     private static final String STRING_FMT = "%s: roomName is %s, angleIn is %f, NavPoint is %s";
 
-    private static final double OCCLUDE_RECT_SIDE = 3;
+    private static final double OCCLUDE_RECT_SIDE = 2;
     private static final double OCCLUDE_RECT_BACK = 2;
 
-    private Node roomCardNode;
+    private BoundedNode roomCardNode;
 
     private String roomName;
     private float angleIn;
@@ -25,20 +28,28 @@ public class EntryPoint extends NavPoint {
         this.roomName = jsonPoint.roomName;
         this.angleIn = jsonPoint.angleIn;
 
-        this.roomCardNode = new Node();
-        this.roomCardNode.setParent(this);
-
+        this.roomCardNode = new BoundedNode(3,0,2,2, null);
+        this.roomCardNode.setVisible(true);
+        this.addChild(this.roomCardNode);
+        this.roomCardNode.setLocalPosition(new Vector3(0, 1,0));
     }
 
-    public void setCard(ViewRenderable card){ this.roomCardNode.setRenderable(card);};
+    @Override
+    public void update(Scene scene){
+        super.update(scene);
+        this.roomCardNode.update(scene);
+    }
+
+
+    public void setCard(ViewRenderable card){
+        this.roomCardNode.setModel(card);
+        this.roomCardNode.setVisible(true);
+    }
 
     public void pointToRoom() {
         this.setRotation(this.angleIn);
     }
 
-    public String getRoomName(){
-        return this.roomName;
-    }
 
 //    public float getAngleIn() {
 //        return this.angleIn;
