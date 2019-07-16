@@ -22,13 +22,11 @@ import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.Material;
 import com.google.ar.sceneform.rendering.MaterialFactory;
 import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.Renderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.samples.augmentedimage.R;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.gson.Gson;
 
-import org.w3c.dom.Text;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -63,6 +61,10 @@ public class MapPlan extends Node {
     private static final Color NAV_COLOR = new Color(0, 0.2f, 0.9f);
     private static final Color DEST_COLOR = new Color(0.2f, 0.9f, 0.1f);
 
+    private static final Vector3 MENU_SCALE = new Vector3(0.3f,0.3f,0.3f);
+    private static final Vector3 MENU_POSITION = new Vector3(0,0.10f,0);
+
+
     private Node menuNode;
     private ModelRenderable mapModel;
     private ModelRenderable navArrow;
@@ -89,8 +91,6 @@ public class MapPlan extends Node {
     }
 
     public void showMap(NodeParent parent, Node seeder){
-
-
         // Upon construction, start loading the models for the floor plan. TODO remove this since we don't want the floor plan in the end product
 
         // we create a temporary node within the local space of the augmentedImage that is detected
@@ -116,13 +116,13 @@ public class MapPlan extends Node {
         this.setLocalRotation(mapLocalRotation);
         this.setParent(parent);
         this.setLocalPosition(mapLocalPos);
-        //        this.setRenderable(mapModel);
+//      this.setRenderable(mapModel);
 
 
         this.menuNode = new Node();
         menuNode.setParent(seeder);
-        menuNode.setLocalPosition(new Vector3(0,0.10f,0));
-        menuNode.setLocalScale(new Vector3(0.3f,0.3f,0.3f));
+        menuNode.setLocalPosition(MENU_POSITION);
+        menuNode.setLocalScale(MENU_SCALE);
 
         Vector3 menuWorldPos = menuNode.getWorldPosition();
         menuNode.setParent(this);
@@ -302,9 +302,9 @@ public class MapPlan extends Node {
         for(int j = 0; j < fadeTextures.length; j++){
             generateAlphaMaterial(context, j);
         }
-        MaterialFactory
+        MaterialFactory // we set the last fadeTexture to be an opaque one since all the transparent textures are all vaguely transparent
                 .makeOpaqueWithColor(context, NAV_COLOR)
-                .thenAccept( material -> this.fadeTextures[100] = material)
+                .thenAccept( material -> this.fadeTextures[this.fadeTextures.length-1] = material)
                 .exceptionally(e -> {
                     Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load custom material, %s", e));
                     return null;
@@ -314,6 +314,7 @@ public class MapPlan extends Node {
     }
 
     // this is a separate function so we wouldn't run into concurrency issues running multiple async functions within a loop
+    // also java didn't like me using non final variables inside here
     private void generateAlphaMaterial(Context context, int matSlot){
         MaterialFactory
                 .makeTransparentWithColor(context, new Color(NAV_COLOR.r, NAV_COLOR.g, NAV_COLOR.b , (float) matSlot*0.01f))

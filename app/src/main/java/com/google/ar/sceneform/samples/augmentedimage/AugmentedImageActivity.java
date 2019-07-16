@@ -110,7 +110,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
 
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
                         foundNode = new AnchorNode();
-
+                        foundNode.setAnchor(augmentedImage.createAnchor(augmentedImage.getCenterPose()));
                         // save node for future reference.
                         augmentedImageMap.put(augmentedImage, foundNode);
 
@@ -121,12 +121,13 @@ public class AugmentedImageActivity extends AppCompatActivity {
                         // ok, this filename based detection is crappy.
                         if (!VIDEO_CODE_FILE_NAME.equals(augmentedImage.getName())) {
                             this.mapPlan.showMap(scene, foundNode);
+                            this.mapPlan.update(this);
+
                         } else {
                             video.render(foundNode);
                         }
 
                     }
-                    this.mapPlan.update(this);
                     break;
 
                 case STOPPED:
