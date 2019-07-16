@@ -2,9 +2,9 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/dvMenu"
     style="@android:style/Widget.Holo.Light.ScrollView"
-    android:layout_width="100dp"
-    android:layout_height="100dp"
-    android:background="#D22C2727">
+    android:layout_width="150dp"
+    android:layout_height="200dp"
+    android:background="#AAFFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"

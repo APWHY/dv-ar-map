@@ -18,11 +18,17 @@ import com.google.ar.sceneform.NodeParent;
 import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.math.Quaternion;
 import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.Color;
+import com.google.ar.sceneform.rendering.Material;
+import com.google.ar.sceneform.rendering.MaterialFactory;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.Renderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.samples.augmentedimage.R;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.gson.Gson;
+
+import org.w3c.dom.Text;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,39 +53,39 @@ import java.util.concurrent.ExecutionException;
 public class MapPlan extends Node {
 
     private static final String TAG = "wayfinder.MapPlan";
-    private static final Vector3 RELATIVE_MAP_POS = new Vector3(18.5f, -1f, 22f);
+    private static final Vector3 RELATIVE_MAP_POS = new Vector3(18.5f, 0, 22f);
 
     // We have all of the data for the map graph in the three json files, but we put the root node data here
     // This is so that when we move the position of the image it is easier to move the root node around
     private static final int ROOT_NAV = 0; // the id of the root node
     private static final int[] ROOT_EDGES = new int[] {2,21,22,23,24,25,3}; // the nodes that this root node is connected to
 
+    private static final Color NAV_COLOR = new Color(0, 0.2f, 0.9f);
+    private static final Color DEST_COLOR = new Color(0.2f, 0.9f, 0.1f);
+
+    private Node menuNode;
     private ModelRenderable mapModel;
     private ModelRenderable navArrow;
     private ModelRenderable destArrow;
     private ViewRenderable roomMenu;
     private final CountDownLatch latch = new CountDownLatch(1);
 
-    Node menuNode;
-
-    private Map<String, EntryPoint> entries = new HashMap<>();
-    private SparseArray<NavPoint> navs = new SparseArray<>();
-    Map<NavPoint, DijkstraPoint> navToDijkstra = new HashMap<>();
+    private Map<String, EntryPoint> entries = new HashMap<>(); // stores all entry points in the map
+    private SparseArray<NavPoint> navs = new SparseArray<>(); // stores all navigation points in the map
+    private Map<NavPoint, DijkstraPoint> navToDijkstra = new HashMap<>(); // converter for navPoints to Dijkstra points -- it's a bit ugly
+    private final Material[] fadeTextures = new Material[101]; // array of textures at different opacities
 
     public MapPlan(Context context) {
         super();
-
         this.loadGraphFromJSON(context);
         this.loadModels(context);
         this.setUpModels();
         this.makeSPT();
     }
 
-    public void update(){
+    public void update(Context context){
         Scene scene = getScene(); // save a million unneeded function calls
-        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).update(scene); }
-//        entries.get("Spindle").update(getScene());
-
+        for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).update(context, scene); }
     }
 
     public void showMap(NodeParent parent, Node seeder){
@@ -103,14 +109,14 @@ public class MapPlan extends Node {
         localMapNode.setParent(seeder);
         localMapNode.setLocalPosition(RELATIVE_MAP_POS);
         Vector3 mapLocalPos = localMapNode.getWorldPosition();
+        mapLocalPos.y = seeder.getWorldPosition().y;
         Quaternion mapLocalRotation = localMapNode.getWorldRotation();
-
+        mapLocalRotation.x = 0;
+        mapLocalRotation.z = 0;
         this.setLocalRotation(mapLocalRotation);
         this.setParent(parent);
         this.setLocalPosition(mapLocalPos);
-//        this.setRenderable(mapModel);
-
-
+        //        this.setRenderable(mapModel);
 
 
         this.menuNode = new Node();
@@ -129,16 +135,15 @@ public class MapPlan extends Node {
 
         }
 
-        // wait for models to finish loading before doing this part -- blocking operation but I don't want to make a whole runnable thing just for
+        // wait for models to finish loading before doing this part -- blocking operation but I don't want to make a whole runnable thing just for it
         try{
             latch.await();
             menuNode.setRenderable(roomMenu);
-            for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setModel(navArrow); }
-            for (EntryPoint p : entries.values().toArray(new EntryPoint[]{})){ p.setModel(destArrow); }
+            for (int j = 0; j < navs.size(); j++) { navs.valueAt(j).setModel(navArrow.makeCopy()); }
+            for (EntryPoint p : entries.values().toArray(new EntryPoint[]{})){ p.setModel(destArrow.makeCopy()); }
         } catch (InterruptedException e) {
             Log.e(TAG, String.format(Locale.ENGLISH, "Couldn't wait for renderables, %s", e));
         }
-//        menuNode.setRenderable(roomMenu);
 
 
     }
@@ -151,7 +156,7 @@ public class MapPlan extends Node {
 
         EntryPoint target = entries.get(roomName);
         target.setVisible(true);
-
+        target.changeColor(DEST_COLOR);
         DijkstraPoint current =  navToDijkstra.get(navs.get(target.getId()));
 
         while (current.prev != null){
@@ -180,6 +185,7 @@ public class MapPlan extends Node {
         }
     }
 
+    // pull the JSON data from nav_points.json, edges.json and entry_points.json
     private void loadGraphFromJSON(@org.jetbrains.annotations.NotNull Context context){
         Gson gson = new Gson();
 
@@ -188,7 +194,7 @@ public class MapPlan extends Node {
         JSONPoint[] jsonNavs = gson.fromJson(new InputStreamReader(inputStream), JSONPoint[].class);
 
         for (JSONPoint p : jsonNavs) {
-            EntryPoint newEntry = new EntryPoint(p);
+            EntryPoint newEntry = new EntryPoint(p, fadeTextures);
             entries.put(p.roomName, newEntry);
             navs.put(p.id, newEntry);
         }
@@ -197,10 +203,10 @@ public class MapPlan extends Node {
         inputStream = context.getResources().openRawResource(R.raw.nav_points);
         jsonNavs = gson.fromJson(new InputStreamReader(inputStream), JSONPoint[].class);
 
-        for (JSONPoint p : jsonNavs) navs.put(p.id, new NavPoint(p));
+        for (JSONPoint p : jsonNavs) navs.put(p.id, new NavPoint(p, fadeTextures));
 
         // add the required data for the root node and insert into the graph
-        navs.put(ROOT_NAV, new NavPoint(ROOT_NAV, RELATIVE_MAP_POS.x, RELATIVE_MAP_POS.z));
+        navs.put(ROOT_NAV, new NavPoint(ROOT_NAV, RELATIVE_MAP_POS.x, RELATIVE_MAP_POS.z, fadeTextures));
         for (int rootEdge : ROOT_EDGES){
             try {
                 navs.get(ROOT_NAV).addEdge(navs.get(rootEdge));
@@ -244,6 +250,7 @@ public class MapPlan extends Node {
             roomMenuLayout.addView(newLine);
 
             // prepare the room cards that we display in front of every room before passing the models to the relevant EntryPoint objects
+            // it turns out I could have actually made a bunch of the same ViewRenderables and changed the view using makeCopy() and getView()...oh well
             LayoutInflater roomInflater = ((AppCompatActivity) context).getLayoutInflater();
             LinearLayout roomCardWrapper = new LinearLayout(context);
             View roomCard = roomInflater.inflate(R.layout.room_card, roomCardWrapper, true);
@@ -268,7 +275,7 @@ public class MapPlan extends Node {
                 ModelRenderable.builder()
                         .setSource(context, R.raw.green_arrow)
                         .build();
-        // Build a renderable from a 2D View.
+
         CompletableFuture<ViewRenderable> roomMenuFuture =
                 ViewRenderable.builder().setView(context, menuWrapper).build();
 
@@ -291,9 +298,34 @@ public class MapPlan extends Node {
                             }
                             return null;
                         });
+
+        for(int j = 0; j < fadeTextures.length; j++){
+            generateAlphaMaterial(context, j);
+        }
+        MaterialFactory
+                .makeOpaqueWithColor(context, NAV_COLOR)
+                .thenAccept( material -> this.fadeTextures[100] = material)
+                .exceptionally(e -> {
+                    Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load custom material, %s", e));
+                    return null;
+                });
+
+
     }
 
+    // this is a separate function so we wouldn't run into concurrency issues running multiple async functions within a loop
+    private void generateAlphaMaterial(Context context, int matSlot){
+        MaterialFactory
+                .makeTransparentWithColor(context, new Color(NAV_COLOR.r, NAV_COLOR.g, NAV_COLOR.b , (float) matSlot*0.01f))
+                .thenAccept( material -> this.fadeTextures[matSlot] = material)
+                .exceptionally(e -> {
+                    Log.e(TAG, String.format(Locale.ENGLISH, "Unable to load custom material, %s", e));
+                    return null;
+                });
+    }
 
+    // setUpModels is supposed to do some last minute processing before we display the menu, but
+    // right now only makes all destination arrows point to their room
     private void setUpModels(){
         for(EntryPoint e: entries.values().toArray(new EntryPoint[]{})){ e.pointToRoom(); }
     }

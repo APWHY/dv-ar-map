@@ -25,6 +25,7 @@ import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -130,17 +131,12 @@ public class AugmentedImageNode extends AnchorNode {
 
     // Lower left corner.
     localPosition.set(-0.5f * image.getExtentX(), 0.0f, 0.5f * image.getExtentZ());
+
     cornerNode = new Node();
     cornerNode.setParent(this);
     cornerNode.setLocalPosition(localPosition);
     cornerNode.setRenderable(llCorner.getNow(null));
 
-//    // test
-//    localPosition.set(0f, 2.0f, 0f);
-//    cornerNode = new Node();
-//    cornerNode.setParent(this);
-//    cornerNode.setLocalPosition(localPosition);
-//    cornerNode.setRenderable(test.getNow(null));
 
   }
 

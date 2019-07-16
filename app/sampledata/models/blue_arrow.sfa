@@ -18,40 +18,14 @@
           metallic: 0,
         },
         {
-          roughness: 1,
+          roughness: 0.1,
         },
         {
           opacity: null,
         },
       ],
       source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
-    },
-    {
-      name: 'BackColor',
-      parameters: [
-        {
-          baseColor: null,
-        },
-        {
-          baseColorTint: [
-            0.64313699999999996,
-            0.69803899999999997,
-            0.73333300000000001,
-            1,
-          ],
-        },
-        {
-          metallic: 0,
-        },
-        {
-          roughness: 1,
-        },
-        {
-          opacity: null,
-        },
-      ],
-      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
-    },
+    }
   ],
   model: {
     attributes: [
