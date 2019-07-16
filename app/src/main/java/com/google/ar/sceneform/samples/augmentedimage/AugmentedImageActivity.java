@@ -108,27 +108,29 @@ public class AugmentedImageActivity extends AppCompatActivity {
                     fitToScanView.setVisibility(View.GONE);
                     // Create a new anchor for newly found images.
 
-                    if (!augmentedImageMap.containsKey(augmentedImage)) {
-                        foundNode = new AnchorNode();
-                        foundNode.setAnchor(augmentedImage.createAnchor(augmentedImage.getCenterPose()));
-                        // save node for future reference.
-                        augmentedImageMap.put(augmentedImage, foundNode);
-
-                        Scene scene = arFragment.getArSceneView().getScene();
-                        scene.addChild(foundNode);
-
-                        // render either video or map.
-                        // ok, this filename based detection is crappy.
-                        if (!VIDEO_CODE_FILE_NAME.equals(augmentedImage.getName())) {
-                            this.mapPlan.showMap(scene, foundNode);
-                            this.mapPlan.update(this);
-
-                        } else {
-                            video.render(foundNode);
-                        }
-
+                    if (augmentedImageMap.containsKey(augmentedImage)) {
+                        break;
                     }
-                    break;
+
+                    foundNode = new AnchorNode();
+                    foundNode.setAnchor(augmentedImage.createAnchor(augmentedImage.getCenterPose()));
+                    // save node for future reference.
+                    augmentedImageMap.put(augmentedImage, foundNode);
+
+                    Scene scene = arFragment.getArSceneView().getScene();
+                    scene.addChild(foundNode);
+
+                    // render either video or map.
+                    // ok, this filename based detection is crappy.
+                    if (VIDEO_CODE_FILE_NAME.equals(augmentedImage.getName())) {
+                        // it's video.
+                        video.render(foundNode);
+                        break;
+                    }
+
+                    // it's a map!
+                    this.mapPlan.showMap(scene, foundNode);
+                    this.mapPlan.update(this);
 
                 case STOPPED:
                     augmentedImageMap.remove(augmentedImage);
