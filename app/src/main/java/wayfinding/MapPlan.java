@@ -121,8 +121,8 @@ public class MapPlan extends Node {
 
         this.menuNode = new Node();
         menuNode.setParent(seeder);
-        menuNode.setLocalPosition(new Vector3(0,0.25f,0));
-        menuNode.setLocalScale(new Vector3(0.5f,0.5f,0.5f));
+        menuNode.setLocalPosition(new Vector3(0,0.10f,0));
+        menuNode.setLocalScale(new Vector3(0.3f,0.3f,0.3f));
 
         Vector3 menuWorldPos = menuNode.getWorldPosition();
         menuNode.setParent(this);

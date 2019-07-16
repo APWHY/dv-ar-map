@@ -41,7 +41,7 @@ class BoundedNode extends Node {
 
 
     BoundedNode(Material[] fadeTextures) {
-        this(1, 1, 1, 1, null, fadeTextures);
+        this(5, 5, 5, 5, null, fadeTextures);
     }
 
     Renderable getModel() {
