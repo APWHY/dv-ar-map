@@ -1,9 +1,10 @@
 package wayfinding;
 
+import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ExternalTexture;
 import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode;
 import com.google.ar.sceneform.samples.augmentedimage.R;
 
 import android.content.Context;
@@ -14,17 +15,20 @@ import android.util.Log;
 
 public class VideoNode extends Node {
     private MediaPlayer mediaPlayer;
+
     private ExternalTexture texture;
+
+    private static final float VIDEO_HEIGHT_METERS = 0.85f;
 
     @Nullable
     private ModelRenderable videoRenderable;
 
-    public VideoNode(Context context) {
+    public VideoNode(Context context, int videoId) {
         super();
 
         texture = new ExternalTexture();
 
-        mediaPlayer = MediaPlayer.create(context, R.raw.dv_video);
+        mediaPlayer = MediaPlayer.create(context, videoId);
         mediaPlayer.setSurface(texture.getSurface());
         mediaPlayer.setLooping(true);
 
@@ -44,7 +48,7 @@ public class VideoNode extends Node {
                         });
     }
 
-    public void render(AugmentedImageNode node) {
+    public void render(AnchorNode node) {
         if (videoRenderable == null) {
             return;
         }
@@ -52,6 +56,13 @@ public class VideoNode extends Node {
         // Create a node to render the video and add it to the anchor.
         Node videoNode = new Node();
         videoNode.setParent(node);
+
+        // Set the scale of the node so that the aspect ratio of the video is correct.
+        float videoWidth = mediaPlayer.getVideoWidth();
+        float videoHeight = mediaPlayer.getVideoHeight();
+        videoNode.setLocalScale(
+                new Vector3(
+                        VIDEO_HEIGHT_METERS * (videoWidth / videoHeight), VIDEO_HEIGHT_METERS, 1.0f));
 
         // Start playing the video when the first node is placed.
         if (mediaPlayer.isPlaying()) {
