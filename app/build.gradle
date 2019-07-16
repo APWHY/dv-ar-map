@@ -48,7 +48,7 @@ dependencies {
     implementation 'com.android.support:design:28.0.0'
 
     // Use the Sceneform UX Package pre-built from Maven.
-    implementation "com.google.ar.sceneform.ux:sceneform-ux:1.9.0"
+    implementation "com.google.ar.sceneform.ux:sceneform-ux:1.10.0"
 
 
     // Use the Sceneform UX Package built from the source files included in the sceneformux folder.
@@ -60,42 +60,20 @@ dependencies {
 
 apply plugin: 'com.google.ar.sceneform.plugin'
 
-sceneform.asset('sampledata/models/frame_lower_left.obj',
-        'default',
-        'sampledata/models/frame_lower_left.sfa',
-        'src/main/assets/models/frame_lower_left')
-
-sceneform.asset('sampledata/models/frame_lower_right.obj',
-        'default',
-        'sampledata/models/frame_lower_right.sfa',
-        'src/main/assets/models/frame_lower_right')
-
-sceneform.asset('sampledata/models/frame_upper_left.obj',
-        'default',
-        'sampledata/models/frame_upper_left.sfa',
-        'src/main/assets/models/frame_upper_left')
-
-sceneform.asset('sampledata/models/frame_upper_right.obj',
-        'default',
-        'sampledata/models/frame_upper_right.sfa',
-        'src/main/assets/models/frame_upper_right')
-
-
-sceneform.asset('sampledata/models/initial.obj',
-        'default',
-        'sampledata/models/initial.sfa',
-        'src/main/raw/res/initial')
-
-
-
-
 sceneform.asset('sampledata/models/green_arrow.obj',
         'default',
         'sampledata/models/green_arrow.sfa',
         'src/main/res/raw/green_arrow')
 
+sceneform.asset('sampledata/models/initial.obj',
+        'default',
+        'sampledata/models/initial.sfa',
+        'src/main/res/raw/initial')
 
-
+sceneform.asset('sampledata/models/video_frame.obj',
+        'default',
+        'sampledata/models/video_frame.sfa',
+        'src/main/res/raw/video_frame')
 
 sceneform.asset('sampledata/models/blue_arrow.obj',
         'default',

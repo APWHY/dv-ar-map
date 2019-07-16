@@ -25,33 +25,35 @@ import android.widget.ImageView;
 import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.Frame;
 import com.google.ar.core.TrackingState;
+import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
+import com.google.ar.sceneform.Scene;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.ar.sceneform.ux.ArFragment;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-
 import wayfinding.MapPlan;
+import wayfinding.VideoNode;
 
 /**
  * This application demonstrates using augmented images to place anchor nodes. app to include image
  * tracking functionality.
  */
 public class AugmentedImageActivity extends AppCompatActivity {
-
-    private static final String TAG = "AugmentedImageActivity";
+    private static final String VIDEO_CODE_FILE_NAME = "frame.png";
 
     private ArFragment arFragment;
     private ImageView fitToScanView;
-    private com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode foundNode = null;
+    private AnchorNode foundNode = null;
 
     private MapPlan mapPlan;
+    private VideoNode video;
 
     // Augmented image and its associated center pose anchor, keyed by the augmented image in
     // the database.
-    private final Map<AugmentedImage, com.google.ar.sceneform.samples.augmentedimage.AugmentedImageNode> augmentedImageMap = new HashMap<>();
+    private final Map<AugmentedImage, AnchorNode> augmentedImageMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
         fitToScanView = findViewById(R.id.image_view_fit_to_scan);
         arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
 
-
+        this.video = new VideoNode(this, R.raw.dv_video);
         this.mapPlan = new MapPlan(this);
     }
 
@@ -87,14 +89,13 @@ public class AugmentedImageActivity extends AppCompatActivity {
             return;
         }
 
-
-
         Collection<AugmentedImage> updatedAugmentedImages =
                 frame.getUpdatedTrackables(AugmentedImage.class);
 
 
         for (AugmentedImage augmentedImage : updatedAugmentedImages) {
-            switch (augmentedImage.getTrackingState()) {
+            TrackingState trackingState = augmentedImage.getTrackingState();
+            switch (trackingState) {
                 case PAUSED:
                     // When an image is in PAUSED state, but the camera is not PAUSED, it has been detected,
                     // but not yet tracked.
@@ -106,12 +107,24 @@ public class AugmentedImageActivity extends AppCompatActivity {
                     // Have to switch to UI Thread to update View.
                     fitToScanView.setVisibility(View.GONE);
                     // Create a new anchor for newly found images.
+
                     if (!augmentedImageMap.containsKey(augmentedImage)) {
-                        foundNode = new AugmentedImageNode(this);
-                        foundNode.setImage(augmentedImage);
+                        foundNode = new AnchorNode();
+
+                        // save node for future reference.
                         augmentedImageMap.put(augmentedImage, foundNode);
-                        arFragment.getArSceneView().getScene().addChild(foundNode);
-                        this.mapPlan.showMap(arFragment.getArSceneView().getScene(),foundNode);
+
+                        Scene scene = arFragment.getArSceneView().getScene();
+                        scene.addChild(foundNode);
+
+                        // render either video or map.
+                        // ok, this filename based detection is crappy.
+                        if (!VIDEO_CODE_FILE_NAME.equals(augmentedImage.getName())) {
+                            this.mapPlan.showMap(scene, foundNode);
+                        } else {
+                            video.render(foundNode);
+                        }
+
                     }
                     this.mapPlan.update(this);
                     break;
