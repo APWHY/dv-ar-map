@@ -7,7 +7,7 @@
 build/
 #
 # # User configuration.
-./local.properties
+local.properties
 #
 # # OS configurations.
 .DS_Store
