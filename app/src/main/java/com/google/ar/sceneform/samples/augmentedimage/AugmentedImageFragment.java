@@ -119,7 +119,7 @@ public class AugmentedImageFragment extends ArFragment {
     // * shorter setup time
     // * doesn't require images to be packaged in apk.
     if (USE_SINGLE_IMAGE) {
-      Bitmap augmentedImageBitmap = loadAugmentedImageBitmap(assetManager);
+      Bitmap augmentedImageBitmap = loadAugmentedImageBitmap(assetManager, DEFAULT_IMAGE_NAME);
       if (augmentedImageBitmap == null) {
         return false;
       }
@@ -145,8 +145,8 @@ public class AugmentedImageFragment extends ArFragment {
     return true;
   }
 
-  private Bitmap loadAugmentedImageBitmap(AssetManager assetManager) {
-    try (InputStream is = assetManager.open(DEFAULT_IMAGE_NAME)) {
+  private Bitmap loadAugmentedImageBitmap(AssetManager assetManager, String filename) {
+    try (InputStream is = assetManager.open(filename)) {
       return BitmapFactory.decodeStream(is);
     } catch (IOException e) {
       Log.e(TAG, "IO exception loading augmented image bitmap.", e);
