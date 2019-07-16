@@ -1,0 +1,38 @@
+{
+  materials: [
+    {
+      name: 'DefaultMaterial',
+      parameters: [
+        {
+          videoTexture: {
+            external_path: 'MISSING_PATH',
+          },
+        },
+        {
+          keyColor: [
+            0,
+            0,
+            0,
+            0,
+          ],
+        },
+        {
+          disableVideoFrame: true,
+        },
+      ],
+      source: 'sampledata/models/video_frame.mat',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/models/video_frame.obj',
+    name: 'video_frame',
+    recenter: 'root',
+  },
+  version: '0.54:2',
+}
