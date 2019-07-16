@@ -131,7 +131,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
                     // it's a map!
                     this.mapPlan.showMap(scene, foundNode);
                     this.mapPlan.update(this);
-
+                    break;
                 case STOPPED:
                     augmentedImageMap.remove(augmentedImage);
                     break;
