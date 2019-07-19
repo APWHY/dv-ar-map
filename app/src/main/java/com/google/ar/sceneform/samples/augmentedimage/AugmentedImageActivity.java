@@ -109,6 +109,9 @@ public class AugmentedImageActivity extends AppCompatActivity {
                     // Create a new anchor for newly found images.
 
                     if (augmentedImageMap.containsKey(augmentedImage)) {
+                        if (!VIDEO_CODE_FILE_NAME.equals(augmentedImage.getName())) {
+                            this.mapPlan.update(this);
+                        }
                         break;
                     }
 
@@ -130,7 +133,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
 
                     // it's a map!
                     this.mapPlan.showMap(scene, foundNode);
-                    this.mapPlan.update(this);
+//                    this.mapPlan.update(this);
                     break;
                 case STOPPED:
                     augmentedImageMap.remove(augmentedImage);
