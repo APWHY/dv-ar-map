@@ -14,3 +14,7 @@ To add more images to the database, check AR Core's documentation on the [arcore
 
 To make life easier, the root node's location and edge details can be changed in the MapPlan.java file instead of the .json files used to define the rest of the map.
 
+The project is meant for Android devices with an API level of >26, although it should still work for API levels 24-26. It should be buildable out of android studio without any changes.
+
+Thanks to Bohdan Kostko for his work on this project.
+
